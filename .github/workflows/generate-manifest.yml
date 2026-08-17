@@ -1,0 +1,49 @@
+name: 生成游戏库清单
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "ROM/**"
+      - "README.md"
+      - "tools/generate_manifest.py"
+      - ".github/workflows/generate-manifest.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    name: 生成 manifest
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: 配置 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 生成游戏库清单
+        run: |
+          python tools/generate_manifest.py \
+            --manifest manifest.v1.json \
+            --search-index search-index.v1.json
+
+      - name: 提交清单变更
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add manifest.v1.json search-index.v1.json
+          if git diff --cached --quiet; then
+            echo "清单无变化"
+          else
+            git commit -m "chore: 更新游戏库清单"
+            git push
+          fi
