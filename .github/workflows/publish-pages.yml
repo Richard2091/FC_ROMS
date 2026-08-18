@@ -35,6 +35,8 @@ jobs:
         run: |
           mkdir -p public
           cp manifest.v1.json search-index.v1.json zh-metadata.v1.json public/
+          # 发布 ROM 封面到 Pages，供客户端懒加载封面
+          cp -r ROM public/ROM
           cat > public/index.html <<'EOF'
           <!doctype html>
           <html lang="zh-CN">
