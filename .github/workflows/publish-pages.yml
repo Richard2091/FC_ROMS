@@ -9,6 +9,10 @@ on:
       - "manifest.v1.json"
       - "search-index.v1.json"
       - "zh-metadata.v1.json"
+      - "cover-source.v1.json"
+      - "ROM/**/cover.webp"
+      - "ROM/**/screenshot.webp"
+      - "tools/generate_pages.py"
       - ".github/workflows/publish-pages.yml"
 
 permissions:
@@ -33,28 +37,7 @@ jobs:
 
       - name: 生成首页
         run: |
-          mkdir -p public
-          cp manifest.v1.json search-index.v1.json zh-metadata.v1.json public/
-          # 发布 ROM 封面到 Pages，供客户端懒加载封面
-          cp -r ROM public/ROM
-          cat > public/index.html <<'EOF'
-          <!doctype html>
-          <html lang="zh-CN">
-            <head>
-              <meta charset="utf-8" />
-              <meta name="viewport" content="width=device-width, initial-scale=1" />
-              <title>红白机游戏库</title>
-            </head>
-            <body>
-              <h1>红白机游戏库</h1>
-              <p>面向 Retro Hall 客户端的在线游戏库清单。</p>
-              <ul>
-                <li><a href="manifest.v1.json">游戏清单</a></li>
-                <li><a href="search-index.v1.json">搜索索引</a></li>
-              </ul>
-            </body>
-          </html>
-          EOF
+          python tools/generate_pages.py --output public
 
       - name: 上传 Pages artifact
         uses: actions/upload-pages-artifact@v3
