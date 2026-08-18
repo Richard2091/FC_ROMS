@@ -1,4 +1,4 @@
-name: 鍙戝竷娓告垙搴?Pages
+name: 发布游戏库 Pages
 
 on:
   workflow_dispatch:
@@ -21,15 +21,16 @@ concurrency:
 
 jobs:
   build:
-    name: 鐢熸垚椤甸潰
+    name: 生成页面
     runs-on: ubuntu-latest
     steps:
-      - name: 妫€鍑轰唬鐮?        uses: actions/checkout@v4
+      - name: 检出代码
+        uses: actions/checkout@v4
 
-      - name: 閰嶇疆 Pages
+      - name: 配置 Pages
         uses: actions/configure-pages@v5
 
-      - name: 鐢熸垚棣栭〉
+      - name: 生成首页
         run: |
           mkdir -p public
           cp manifest.v1.json search-index.v1.json public/
@@ -39,32 +40,32 @@ jobs:
             <head>
               <meta charset="utf-8" />
               <meta name="viewport" content="width=device-width, initial-scale=1" />
-              <title>绾㈢櫧鏈烘父鎴忓簱</title>
+              <title>红白机游戏库</title>
             </head>
             <body>
-              <h1>绾㈢櫧鏈烘父鎴忓簱</h1>
-              <p>闈㈠悜 Retro Hall 瀹㈡埛绔殑鍦ㄧ嚎娓告垙搴撴竻鍗曘€?/p>
+              <h1>红白机游戏库</h1>
+              <p>面向 Retro Hall 客户端的在线游戏库清单。</p>
               <ul>
-                <li><a href="manifest.v1.json">娓告垙娓呭崟</a></li>
-                <li><a href="search-index.v1.json">鎼滅储绱㈠紩</a></li>
+                <li><a href="manifest.v1.json">游戏清单</a></li>
+                <li><a href="search-index.v1.json">搜索索引</a></li>
               </ul>
             </body>
           </html>
           EOF
 
-      - name: 涓婁紶 Pages artifact
+      - name: 上传 Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: public
 
   deploy:
-    name: 鍙戝竷 Pages
+    name: 发布 Pages
     needs: build
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: 閮ㄧ讲鍒?GitHub Pages
+      - name: 部署到 GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
