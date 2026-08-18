@@ -8,6 +8,7 @@ on:
     paths:
       - "manifest.v1.json"
       - "search-index.v1.json"
+      - "zh-metadata.v1.json"
       - ".github/workflows/publish-pages.yml"
 
 permissions:
@@ -33,7 +34,7 @@ jobs:
       - name: 生成首页
         run: |
           mkdir -p public
-          cp manifest.v1.json search-index.v1.json public/
+          cp manifest.v1.json search-index.v1.json zh-metadata.v1.json public/
           cat > public/index.html <<'EOF'
           <!doctype html>
           <html lang="zh-CN">
