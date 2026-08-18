@@ -18,6 +18,8 @@ from urllib.parse import quote
 
 ROM_EXTENSIONS = {".nes", ".fds"}
 COVER_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
+SCREENSHOT_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
+SCREENSHOT_NAMES = {"screenshot", "snap", "shot", "screen"}
 README_ROW_RE = re.compile(r"^\|\s*\[(?P<id>\d{4})\]\(\./ROM/(?P=id)\)\s*\|")
 
 
@@ -151,6 +153,32 @@ def find_cover(game_dir: Path) -> Path | None:
     return covers[0]
 
 
+def find_screenshots(game_dir: Path) -> list[Path]:
+    """返回目录中的游戏内截图文件，按名称优先顺序、文件名排序。"""
+    if not game_dir.exists():
+        return []
+    candidates = [
+        child for child in game_dir.iterdir()
+        if child.is_file() and child.suffix.lower() in SCREENSHOT_EXTENSIONS
+        and child.stem.lower() not in {"cover", "boxart", "folder", "logo"}
+    ]
+    if not candidates:
+        return []
+    candidates.sort(key=lambda item: item.name.lower())
+    return candidates
+
+
+def find_logos(game_dir: Path) -> list[Path]:
+    """返回目录中的游戏标题 logo 文件（libretro Named_Logos 兜底资源）。"""
+    if not game_dir.exists():
+        return []
+    logos = sorted(
+        (child for child in game_dir.iterdir() if child.is_file() and child.suffix.lower() in SCREENSHOT_EXTENSIONS),
+        key=lambda item: item.name.lower(),
+    )
+    return [logo for logo in logos if logo.stem.lower() == "logo"]
+
+
 def rom_entry(root: Path, path: Path, repository: str | None, ref: str | None) -> dict[str, Any]:
     parsed = parse_rom_filename(path)
     relative_path = rel(path, root)
@@ -213,6 +241,10 @@ def build_manifest(root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
 
         cover = find_cover(game_dir)
         relative_cover = rel(cover, root) if cover else ""
+        screenshots = find_screenshots(game_dir)
+        relative_screenshots = [rel(s, root) for s in screenshots]
+        logos = find_logos(game_dir)
+        relative_logos = [rel(l, root) for l in logos]
         entries = [rom_entry(root, rom, repository, ref) for rom in roms]
 
         game = {
@@ -230,7 +262,10 @@ def build_manifest(root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
             "assets": {
                 "cover": relative_cover or None,
                 "coverUrl": raw_url(repository, ref, relative_cover) if relative_cover else None,
-                "screenshots": [],
+                "screenshots": relative_screenshots,
+                "screenshotUrls": [raw_url(repository, ref, s) for s in relative_screenshots if s],
+                "logos": relative_logos,
+                "logoUrls": [raw_url(repository, ref, l) for l in relative_logos if l],
             },
             "metadataWarnings": game_warnings,
         }
@@ -267,6 +302,8 @@ def build_manifest(root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
                 "romCount": game["romCount"],
                 "romDir": game["romDir"],
                 "hasCover": bool(game["assets"]["cover"]),
+                "hasScreenshots": bool(game["assets"]["screenshots"]),
+                "hasLogos": bool(game["assets"]["logos"]),
             }
             for game in games
         ],
